@@ -1,0 +1,651 @@
+{
+    "schemes": [],
+    "swagger": "2.0",
+    "info": {
+        "description": "API documentation for Mono application",
+        "title": "Mono API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "email": "fd@fdvky.me"
+        },
+        "version": "1.0"
+    },
+    "host": "mono.fdvky.me",
+    "basePath": "/api/v1",
+    "paths": {
+        "/fb": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Extract video download links (HD, SD) and thumbnail from Facebook video URL",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Facebook"
+                ],
+                "summary": "Get Facebook video download links",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Facebook video URL",
+                        "name": "url",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.FacebookVideoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/ig": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Extract media download links (images/videos) from Instagram post URL",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Instagram"
+                ],
+                "summary": "Get Instagram media download links",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Instagram post URL",
+                        "name": "url",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.InstagramResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/kbbi": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Scrape dictionary entry from KBBI website",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KBBI"
+                ],
+                "summary": "Get KBBI dictionary entry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Keyword to search",
+                        "name": "keyword",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.KBBIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/tesaurus": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Scrape thesaurus entry from tesaurus website",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tesaurus"
+                ],
+                "summary": "Get tesaurus thesaurus entry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Keyword to search",
+                        "name": "keyword",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Word class filter (adjektiva, adverbia, konjungsi, nomina, numeralia, partikel, verba)",
+                        "name": "category",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.TesaurusResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/tiktok": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Extract video/image download links from TikTok URL",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TikTok"
+                ],
+                "summary": "Get TikTok video download links",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "TikTok video URL",
+                        "name": "url",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.TikTokResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/yt/download": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Download YouTube video or audio by URL",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "YouTube"
+                ],
+                "summary": "Download YouTube video/audio",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "YouTube video URL",
+                        "name": "url",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.YouTubeDownloadResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/yt/search": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Search for YouTube videos by query",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "YouTube"
+                ],
+                "summary": "Search YouTube videos",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/v1.YouTubeSearchResult"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "v1.Entri": {
+            "type": "object",
+            "properties": {
+                "bentuk_tidak_baku": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "kata_dasar": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "makna": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1.Makna"
+                    }
+                },
+                "nama": {
+                    "type": "string"
+                },
+                "pelafalan": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.FacebookVideoResponse": {
+            "type": "object",
+            "properties": {
+                "hd": {
+                    "type": "string"
+                },
+                "sd": {
+                    "type": "string"
+                },
+                "thumbnail": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.InstagramResponse": {
+            "type": "object",
+            "properties": {
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "videos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1.InstagramVideo"
+                    }
+                }
+            }
+        },
+        "v1.InstagramVideo": {
+            "type": "object",
+            "properties": {
+                "src": {
+                    "type": "string"
+                },
+                "thumbnail": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.KBBIResponse": {
+            "type": "object",
+            "properties": {
+                "entri": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1.Entri"
+                    }
+                }
+            }
+        },
+        "v1.KelasKata": {
+            "type": "object",
+            "properties": {
+                "kode": {
+                    "type": "string"
+                },
+                "nama": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.Makna": {
+            "type": "object",
+            "properties": {
+                "contoh": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "kelas": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1.KelasKata"
+                    }
+                },
+                "submakna": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "v1.TesaurusContent": {
+            "type": "object",
+            "properties": {
+                "article": {
+                    "type": "string"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "html": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.TesaurusResponse": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1.TesaurusContent"
+                    }
+                }
+            }
+        },
+        "v1.TikTokResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "image_url": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "username": {
+                    "type": "string"
+                },
+                "video_url": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "v1.YouTubeDownloadResult": {
+            "type": "object",
+            "properties": {
+                "audioFormats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1.YouTubeFormat"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "thumbnail": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "videoFormats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1.YouTubeFormat"
+                    }
+                }
+            }
+        },
+        "v1.YouTubeFormat": {
+            "type": "object",
+            "properties": {
+                "acodec": {
+                    "type": "string"
+                },
+                "bitrate": {
+                    "type": "number"
+                },
+                "ext": {
+                    "type": "string"
+                },
+                "filesize": {
+                    "type": "integer"
+                },
+                "formatId": {
+                    "type": "string"
+                },
+                "quality": {
+                    "type": "string"
+                },
+                "resolution": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "vcodec": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.YouTubeSearchResult": {
+            "type": "object",
+            "properties": {
+                "ago": {
+                    "type": "string"
+                },
+                "author": {
+                    "type": "string"
+                },
+                "thumbnailUrl": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "videoId": {
+                    "type": "string"
+                },
+                "views": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "description": "API Key for authentication",
+            "type": "apiKey",
+            "name": "X-API-Key",
+            "in": "header"
+        },
+        "BearerAuth": {
+            "description": "Type \"Bearer\" followed by a space and JWT token",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}
