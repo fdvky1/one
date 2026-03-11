@@ -84,7 +84,7 @@ const getDownloadLinks = computed(() => {
   if (result.value.videoFormats) {
     result.value.videoFormats.forEach((format: any, index: number) => {
       links.push({
-        label: `Video ${format.quality || format.formatId} (${format.ext})`,
+        label: `Video ${format.resolution || format.formatId} (${format.ext})`,
         url: format.url,
         type: 'video'
       })
@@ -93,7 +93,7 @@ const getDownloadLinks = computed(() => {
   if (result.value.audioFormats) {
     result.value.audioFormats.forEach((format: any, index: number) => {
       links.push({
-        label: `Audio ${format.quality || format.formatId} (${format.ext})`,
+        label: `Audio ${format.formatId} (${format.ext})`,
         url: format.url,
         type: 'audio'
       })
@@ -137,6 +137,7 @@ const getDownloadLinks = computed(() => {
   return links
 })
 
+/*
 const downloadAll = async () => {
   const links = getDownloadLinks.value
   if (links.length === 0) return
@@ -171,6 +172,7 @@ const downloadAll = async () => {
     }
   }
 }
+*/
 </script>
 
 <template>
@@ -224,6 +226,7 @@ const downloadAll = async () => {
         <div v-if="result" class="border-t-2 border-gray-900 pt-4 sm:pt-6">
           <div class="flex items-center justify-between mb-3 sm:mb-4">
             <h3 class="text-lg sm:text-xl font-black text-gray-900">📦 Results</h3>
+            <!--
             <button
               v-if="getDownloadLinks.length > 1"
               @click="downloadAll"
@@ -232,6 +235,7 @@ const downloadAll = async () => {
               <Icon name="mdi:download-multiple" class="text-lg sm:text-xl" />
               <span class="text-xs sm:text-sm">Download All ({{ getDownloadLinks.length }})</span>
             </button>
+            -->
           </div>
           
           <!-- Metadata -->
