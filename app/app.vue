@@ -1,14 +1,17 @@
 <script setup lang="ts">
+const route = useRoute()
+const router = useRouter()
+
 const url = ref('')
 const loading = ref(false)
 const result = ref<any>(null)
 const toast = ref({ show: false, message: '', type: 'error' })
 
 const platforms = [
-  { name: 'YouTube', icon: 'mdi:youtube', color: 'bg-red-100 hover:bg-red-200 text-red-700 border-red-700', regex: /(?:youtube\.com|youtu\.be)/i, endpoint: '/yt/download' },
-  { name: 'Instagram', icon: 'mdi:instagram', color: 'bg-pink-100 hover:bg-pink-200 text-pink-700 border-pink-700', regex: /instagram\.com/i, endpoint: '/ig' },
-  { name: 'Facebook', icon: 'mdi:facebook', color: 'bg-blue-100 hover:bg-blue-200 text-blue-700 border-blue-700', regex: /facebook\.com|fb\.watch/i, endpoint: '/fb' },
-  { name: 'TikTok', icon: 'mdi:music-note', color: 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-800', regex: /tiktok\.com/i, endpoint: '/tiktok' }
+  { id: 'youtube', name: 'YouTube', icon: 'mdi:youtube', color: 'bg-red-100 hover:bg-red-200 text-red-700 border-red-700', regex: /(?:youtube\.com|youtu\.be)/i, endpoint: '/yt/download' },
+  { id: 'instagram', name: 'Instagram', icon: 'mdi:instagram', color: 'bg-pink-100 hover:bg-pink-200 text-pink-700 border-pink-700', regex: /instagram\.com/i, endpoint: '/ig' },
+  { id: 'facebook', name: 'Facebook', icon: 'mdi:facebook', color: 'bg-blue-100 hover:bg-blue-200 text-blue-700 border-blue-700', regex: /facebook\.com|fb\.watch/i, endpoint: '/fb' },
+  { id: 'tiktok', name: 'TikTok', icon: 'mdi:music-note', color: 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-800', regex: /tiktok\.com/i, endpoint: '/tiktok' }
 ]
 
 const isUrlValid = computed(() => url.value.trim().length > 0)
@@ -43,9 +46,9 @@ const callApi = async (endpoint: string, inputUrl: string) => {
     })
     
     result.value = response
-    showToast('Got it! Ready to download', 'success')
+    showToast('Berhasil! Siap untuk diunduh', 'success')
   } catch (error: any) {
-    showToast(error.data?.message || 'Oops, something went wrong')
+    showToast(error.data?.message || 'Waduh, sesuatu berjalan salah')
     console.error('API Error:', error)
   } finally {
     loading.value = false
@@ -57,10 +60,11 @@ const handleGo = async () => {
   
   const platform = detectPlatform(url.value)
   if (!platform) {
-    showToast('URL not recognized. Please select platform manually.')
+    showToast('Tautan tidak dikenali. Silakan pilih platform manual.')
     return
   }
   
+  router.push({ path: `/${platform.id}`, query: { url: url.value } })
   await callApi(platform.endpoint, url.value)
 }
 
@@ -68,12 +72,32 @@ const handlePlatformClick = async (platform: any) => {
   if (!isUrlValid.value) return
   
   if (!platform.regex.test(url.value)) {
-    showToast(`This doesn't look like a ${platform.name} link`)
+    showToast(`Sepertinya ini bukan tautan ${platform.name}`)
     return
   }
   
+  router.push({ path: `/${platform.id}`, query: { url: url.value } })
   await callApi(platform.endpoint, url.value)
 }
+
+onMounted(async () => {
+  if (route.query.url) {
+    url.value = route.query.url as string
+    
+    const pathId = route.path.replace('/', '')
+    const platform = platforms.find(p => p.id === pathId)
+    
+    if (platform) {
+      await callApi(platform.endpoint, url.value)
+    } else {
+      const detected = detectPlatform(url.value)
+      if (detected) {
+        router.replace({ path: `/${detected.id}`, query: { url: url.value } })
+        await callApi(detected.endpoint, url.value)
+      }
+    }
+  }
+})
 
 const getDownloadLinks = computed(() => {
   if (!result.value) return []
@@ -180,8 +204,8 @@ const downloadAll = async () => {
     <div class="w-full max-w-4xl">
       <!-- Header -->
       <div class="text-center mb-6 sm:mb-8">
-        <h1 class="text-3xl sm:text-4xl font-black text-gray-900 mb-2">Downloader</h1>
-        <p class="text-sm sm:text-base text-gray-700 font-medium">Save your favorite content from anywhere</p>
+        <h1 class="text-3xl sm:text-4xl font-black text-gray-900 mb-2">All In One Downloader</h1>
+        <p class="text-sm sm:text-base text-gray-700 font-medium">Simpan konten favoritmu dari mana saja</p>
       </div>
       
       <!-- Main Card -->
@@ -191,7 +215,7 @@ const downloadAll = async () => {
           <input
             v-model="url"
             type="text"
-            placeholder="Paste your link here..."
+            placeholder="Tempel tautanmu di sini..."
             class="flex-1 px-3 py-2.5 sm:px-4 sm:py-3 border-2 border-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm sm:text-base text-gray-900 font-medium placeholder:text-gray-500"
             @keyup.enter="handleGo"
           />
@@ -225,7 +249,7 @@ const downloadAll = async () => {
         <!-- Results -->
         <div v-if="result" class="border-t-2 border-gray-900 pt-4 sm:pt-6">
           <div class="flex items-center justify-between mb-3 sm:mb-4">
-            <h3 class="text-lg sm:text-xl font-black text-gray-900">📦 Results</h3>
+            <h3 class="text-lg sm:text-xl font-black text-gray-900">📦 Hasil</h3>
             <!--
             <button
               v-if="getDownloadLinks.length > 1"
@@ -309,7 +333,7 @@ const downloadAll = async () => {
       
       <!-- Footer -->
       <div class="text-center mt-6 sm:mt-8 text-xs sm:text-sm text-gray-700 space-y-2 px-2">
-        <p class="font-medium">✨ Support: YouTube • Instagram • Facebook • TikTok</p>
+        <p class="font-medium">Support: YouTube • Instagram • Facebook • TikTok</p>
         <p class="font-medium">
           Powered by 
           <a 
