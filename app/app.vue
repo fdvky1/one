@@ -8,7 +8,7 @@ const result = ref<any>(null)
 const toast = ref({ show: false, message: '', type: 'error' })
 
 const platforms = [
-  { id: 'youtube', name: 'YouTube', icon: 'mdi:youtube', color: 'bg-red-100 hover:bg-red-200 text-red-700 border-red-700', regex: /(?:youtube\.com|youtu\.be)/i, endpoint: '/yt/download' },
+  { id: 'youtube', name: 'YouTube', icon: 'mdi:youtube', color: 'bg-red-100 hover:bg-red-200 text-red-700 border-red-700', regex: /(?:youtube\.com|youtu\.be)/i, endpoint: '/yt/query' },
   { id: 'instagram', name: 'Instagram', icon: 'mdi:instagram', color: 'bg-pink-100 hover:bg-pink-200 text-pink-700 border-pink-700', regex: /instagram\.com/i, endpoint: '/ig' },
   { id: 'facebook', name: 'Facebook', icon: 'mdi:facebook', color: 'bg-blue-100 hover:bg-blue-200 text-blue-700 border-blue-700', regex: /facebook\.com|fb\.watch/i, endpoint: '/fb' },
   { id: 'tiktok', name: 'TikTok', icon: 'mdi:music-note', color: 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-800', regex: /tiktok\.com/i, endpoint: '/tiktok' }
@@ -107,19 +107,29 @@ const getDownloadLinks = computed(() => {
   // YouTube
   if (result.value.videoFormats) {
     result.value.videoFormats.forEach((format: any, index: number) => {
+      let proxyUrl = format.url
+      try {
+        const u = new URL(format.url)
+        proxyUrl = '/api/yt-download' + u.search
+      } catch(e) {}
       links.push({
         label: `Video ${format.resolution || format.formatId} (${format.ext})`,
-        url: format.url,
-        type: 'video'
+        url: proxyUrl,
+        type: 'link'
       })
     })
   }
   if (result.value.audioFormats) {
     result.value.audioFormats.forEach((format: any, index: number) => {
+      let proxyUrl = format.url
+      try {
+        const u = new URL(format.url)
+        proxyUrl = '/api/yt-download' + u.search
+      } catch(e) {}
       links.push({
         label: `Audio ${format.formatId} (${format.ext})`,
-        url: format.url,
-        type: 'audio'
+        url: proxyUrl,
+        type: 'link'
       })
     })
   }
