@@ -6,17 +6,21 @@ use aes_gcm::{
 use hex::FromHex;
 use zeroize::Zeroizing;
 
-// 3. OBFUSCATED AT COMPILE TIME
-// During build, Bash will set BUILD_TIME_KEY variable which is the "rev" (reversed) result.
-const OBFUSCATED_KEY: &str = env!("BUILD_TIME_KEY");
+// 3. OBFUSCATED AT COMPILE TIME (Via build.rs XOR Mutation)
+include!(concat!(env!("OUT_DIR"), "/obfuscated_key.rs"));
 
 #[wasm_bindgen]
 pub fn decrypt(encrypted_hex: &str, iv_hex: &str, auth_tag_hex: &str) -> Result<String, JsValue> {
-    // Reverse the string back to normal key during runtime 
-    let reversed_key: String = OBFUSCATED_KEY.chars().rev().collect();
+    // Reconstruct the hex string at runtime via XOR
+    let mut original_key_bytes = Zeroizing::new(Vec::with_capacity(XORED_KEY.len()));
+    for i in 0..XORED_KEY.len() {
+        let original_byte = XORED_KEY[i] ^ XOR_PAD[i];
+        original_key_bytes.push(original_byte);
+    }
     
     // Use Zeroizing so the key is automatically wiped from memory on drop
-    let key_bytes = Zeroizing::new(Vec::from_hex(&reversed_key).map_err(|_| "Invalid key format")?);
+    // We pass the raw bytes directly to hex parser so it never lives as a standard JS/Rust String.
+    let key_bytes = Zeroizing::new(Vec::from_hex(&*original_key_bytes).map_err(|_| "Invalid key format")?);
     
     // Setup the Aes256Gcm decipher
     let key = GenericArray::clone_from_slice(&key_bytes);

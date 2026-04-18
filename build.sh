@@ -6,10 +6,8 @@ echo "⚙️  [1/4] Generating Master Key..."
 RAW_KEY=$(openssl rand -hex 32)
 
 echo "🔐 [2/4] Injecting Keys to Server config..."
-# Simple Obfuscation: reverse the string at compile time
-# In Rust, we need to reverse it back
-OBFUSCATED_KEY=$(echo -n $RAW_KEY | rev)
-export BUILD_TIME_KEY=$OBFUSCATED_KEY
+# Build script will handle the XOR mutation automatically based on BUILD_TIME_KEY
+export BUILD_TIME_KEY=$RAW_KEY
 
 mkdir -p server/utils app/utils public/wasm
 cat <<EOF > server/utils/secret.ts
