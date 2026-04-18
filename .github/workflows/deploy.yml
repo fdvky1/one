@@ -51,4 +51,4 @@ jobs:
 
       - name: 🚀 Deploy Prebuilt Asset to Vercel
         # Deploy the prebuilt output format to Vercel directly (skipping vercel build since Nuxt already generated .vercel/output)
-        vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
