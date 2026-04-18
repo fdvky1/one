@@ -10,7 +10,8 @@ export default defineEventHandler(async (event) => {
       method: 'GET',
       headers: {
         'X-API-Key': config.apiKey
-      }
+      },
+      signal: AbortSignal.timeout(60000) // Timeout 60 detik
     })
     
     if (!response.ok) {
@@ -34,6 +35,13 @@ export default defineEventHandler(async (event) => {
     })
   } catch (error: any) {
     console.error('Proxy Download Error:', error)
+    
+    if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+      throw createError({
+        statusCode: 504,
+        message: 'Request timeout: antrean di server terlalu penuh atau lambat merespons'
+      })
+    }
     
     if (error.statusCode) {
       throw error
