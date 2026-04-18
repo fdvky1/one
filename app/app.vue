@@ -37,7 +37,7 @@ const callApi = async (endpoint: string, inputUrl: string) => {
   result.value = null
   
   try {
-    const response = await $fetch('/api/proxy', {
+    const response: any = await $fetch('/api/proxy', {
       method: 'POST',
       body: {
         endpoint,
@@ -45,7 +45,21 @@ const callApi = async (endpoint: string, inputUrl: string) => {
       }
     })
     
-    result.value = response
+    // Initialize WASM file from fingerprinted URL (from utils/wasmConfig.ts)
+    const { WASM_JS_URL, WASM_FILE_URL } = await import('~/utils/wasmConfig')
+    const wasm: any = await import(/* @vite-ignore */ WASM_JS_URL)
+    const init = wasm.default || wasm
+    
+    // Initialize wasm instance
+    await init(WASM_FILE_URL)
+    
+    // Server returns { d: encryptedData, t: iv, a: authTag }
+    // Let's decrypt these parameters using WASM
+    const decryptedString = wasm.decrypt(response.d, response.t, response.a)
+    
+    // Parse back into JSON and set to state
+    result.value = JSON.parse(decryptedString)
+    
     showToast('Berhasil! Siap untuk diunduh', 'success')
   } catch (error: any) {
     showToast(error.data?.message || 'Waduh, sesuatu berjalan salah')

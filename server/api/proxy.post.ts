@@ -32,7 +32,28 @@ export default defineEventHandler(async (event) => {
     }
     
     const data = await response.json()
-    return data
+
+    // Import the build-generated secret string dynamically
+    // Use AES-256-GCM to encrypt the response body
+    const { secretKey } = await import('../utils/secret').catch(() => {
+      throw createError({ statusCode: 500, message: 'Server missing crypto key' })
+    })
+
+    const crypto = await import('node:crypto')
+    const keyBuffer = Buffer.from(secretKey, 'hex')
+    const iv = crypto.randomBytes(12)
+    const cipher = crypto.createCipheriv('aes-256-gcm', keyBuffer, iv)
+    
+    let encrypted = cipher.update(JSON.stringify(data), 'utf8', 'hex')
+    encrypted += cipher.final('hex')
+    const authTag = cipher.getAuthTag().toString('hex')
+
+    // Return the encrypted blob alongside its IV and auth tag
+    return {
+      t: iv.toString('hex'),       // Token/IV
+      d: encrypted,                // Encoded Data
+      a: authTag                   // Auth Tag for GCM
+    }
   } catch (error: any) {
     console.error('Proxy API Error:', error)
     

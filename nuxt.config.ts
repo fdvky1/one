@@ -16,5 +16,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     apiKey: process.env.API_KEY,
     baseUrl: process.env.BASE_URL || 'https://mono.fdvky.me/api/v1'
+  },
+  routeRules: {
+    '/wasm/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } }
   }
 })

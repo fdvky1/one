@@ -1,0 +1,51 @@
+name: Production Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Build & Deploy to Vercel
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🦀 Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: wasm32-unknown-unknown
+
+      - name: 📦 Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 🟡 Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: 🏗️ Execute Build Flow (Generate Key, Compile WASM, Build Nuxt)
+        env:
+          # Force Nuxt builder to output ".vercel" format to deploy as prebuilt static/edge asset
+          NITRO_PRESET: vercel
+        run: bash build.sh
+
+      - name: 🚀 Deploy Prebuilt Asset to Vercel
+        run: |
+          pnpm install -g vercel@latest
+          # Pull Vercel environment and configuration
+          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          # Deploy the prebuilt output format to Vercel directly (skipping vercel build since Nuxt already generated .vercel/output)
+          vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
