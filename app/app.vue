@@ -248,7 +248,7 @@ const downloadAll = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center p-6 lg:p-10 max-sm:items-start max-sm:pt-14">
+  <div class="min-h-[calc(100vh-8rem)] flex items-center justify-center py-6 px-4 lg:p-10 max-sm:items-start max-sm:pt-14">
     <div class="w-full max-w-2xl lg:max-w-3xl">
       <!-- Header -->
       <header class="mb-12 max-sm:mb-8">
@@ -269,7 +269,7 @@ const downloadAll = async () => {
       </header>
       
       <!-- Input -->
-      <div class="flex gap-3 mb-5">
+      <div class="flex gap-1 md:gap-3 mb-5">
         <input
           v-model="url"
           type="text"
@@ -379,19 +379,6 @@ const downloadAll = async () => {
         </div>
       </div>
       
-      <!-- Footer -->
-      <footer class="text-center mt-12 text-sm text-txt-3 flex flex-col items-center gap-2">
-        <div class="flex items-center gap-2">
-          <span>YouTube · Instagram · Facebook · TikTok</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <a href="https://mono.fdvky.me" target="_blank" class="font-mono text-txt-2 no-underline transition-colors duration-200 hover:text-txt">mono</a>
-          <span class="text-txt-3">·</span>
-          <a href="https://github.com/fdvky1/one" target="_blank" class="font-mono text-txt-2 no-underline transition-colors duration-200 hover:text-txt inline-flex items-center gap-1">
-            <Icon name="mdi:github" class="text-base" />github
-          </a>
-        </div>
-      </footer>
     </div>
     
     <!-- Toast -->
@@ -413,6 +400,19 @@ const downloadAll = async () => {
       </div>
     </Transition>
   </div>
+  <!-- Footer -->
+  <footer class="text-center mt-12 mb-6 text-sm text-txt-3 flex flex-col items-center gap-2">
+    <div class="flex items-center gap-2">
+      <span>YouTube · Instagram · Facebook · TikTok</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="https://mono.fdvky.me" target="_blank" class="font-mono text-txt-2 no-underline transition-colors duration-200 hover:text-txt">mono</a>
+      <span class="text-txt-3">·</span>
+      <a href="https://github.com/fdvky1/one" target="_blank" class="font-mono text-txt-2 no-underline transition-colors duration-200 hover:text-txt inline-flex items-center gap-1">
+        <Icon name="mdi:github" class="text-base" />github
+      </a>
+    </div>
+  </footer>
 </template>
 
 <style scoped>
