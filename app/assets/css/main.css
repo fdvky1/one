@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-border-hover: var(--border-hover);
+  --color-txt: var(--text);
+  --color-txt-2: var(--text-2);
+  --color-txt-3: var(--text-3);
+  --color-btn-bg: var(--btn-bg);
+  --color-btn-fg: var(--btn-fg);
+  --color-accent: var(--accent);
+  --color-th-green: var(--green);
+  --color-th-red: var(--red);
+}
+
+/* Theme variables */
+:root,
+[data-theme="dark"] {
+  --bg: #181818;
+  --surface: #222;
+  --surface-2: #2a2a2a;
+  --border: #333;
+  --border-hover: #444;
+  --text: #ececec;
+  --text-2: #999;
+  --text-3: #666;
+  --btn-bg: #fff;
+  --btn-fg: #181818;
+  --green: #34d399;
+  --red: #f06;
+}
+
+[data-theme="light"] {
+  --bg: #f8f7f4;
+  --surface: #fff;
+  --surface-2: #f0efec;
+  --border: #e2e0dc;
+  --border-hover: #ccc9c3;
+  --text: #1a1a1a;
+  --text-2: #6b6b6b;
+  --text-3: #9a9a9a;
+  --btn-bg: #1a1a1a;
+  --btn-fg: #f8f7f4;
+  --green: #0d9668;
+  --red: #dc2645;
+}
+
+/* Base */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Vue toast transitions */
+.toast-enter-active {
+  transition: all 0.25s ease-out;
+}
+.toast-leave-active {
+  transition: all 0.2s ease-in;
+}
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}

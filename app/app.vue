@@ -7,11 +7,30 @@ const loading = ref(false)
 const result = ref<any>(null)
 const toast = ref({ show: false, message: '', type: 'error' })
 
+// Theme
+const isDark = ref(true)
+
+const toggleTheme = () => {
+  isDark.value = !isDark.value
+  document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
+  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+}
+
+onMounted(() => {
+  const saved = localStorage.getItem('theme')
+  if (saved) {
+    isDark.value = saved === 'dark'
+  } else {
+    isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+  }
+  document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
+})
+
 const platforms = [
-  { id: 'youtube', name: 'YouTube', icon: 'mdi:youtube', color: 'bg-red-100 hover:bg-red-200 text-red-700 border-red-700', regex: /(?:youtube\.com|youtu\.be)/i, endpoint: '/yt/query' },
-  { id: 'instagram', name: 'Instagram', icon: 'mdi:instagram', color: 'bg-pink-100 hover:bg-pink-200 text-pink-700 border-pink-700', regex: /instagram\.com/i, endpoint: '/ig' },
-  { id: 'facebook', name: 'Facebook', icon: 'mdi:facebook', color: 'bg-blue-100 hover:bg-blue-200 text-blue-700 border-blue-700', regex: /facebook\.com|fb\.watch/i, endpoint: '/fb' },
-  { id: 'tiktok', name: 'TikTok', icon: 'mdi:music-note', color: 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-800', regex: /tiktok\.com/i, endpoint: '/tiktok' }
+  { id: 'youtube', name: 'YouTube', icon: 'mdi:youtube', accent: '#ff4444', regex: /(?:youtube\.com|youtu\.be)/i, endpoint: '/yt/query' },
+  { id: 'instagram', name: 'Instagram', icon: 'mdi:instagram', accent: '#e1306c', regex: /instagram\.com/i, endpoint: '/ig' },
+  { id: 'facebook', name: 'Facebook', icon: 'mdi:facebook', accent: '#4267b2', regex: /facebook\.com|fb\.watch/i, endpoint: '/fb' },
+  { id: 'tiktok', name: 'TikTok', icon: 'mdi:music-note', accent: '#fe2c55', regex: /tiktok\.com/i, endpoint: '/tiktok' }
 ]
 
 const isUrlValid = computed(() => url.value.trim().length > 0)
@@ -45,24 +64,29 @@ const callApi = async (endpoint: string, inputUrl: string) => {
       }
     })
     
-    // Initialize WASM file from fingerprinted URL (from utils/wasmConfig.ts)
-    const { WASM_JS_URL, WASM_FILE_URL } = await import('~/utils/wasmConfig')
-    const wasm: any = await import(/* @vite-ignore */ WASM_JS_URL)
-    const init = wasm.default || wasm
+    if (response.raw) {
+      // Direct unencrypted response in development mode
+      result.value = response.raw
+    } else {
+      // Initialize WASM file from fingerprinted URL (from utils/wasmConfig.ts)
+      const { WASM_JS_URL, WASM_FILE_URL } = await import('~/utils/wasmConfig')
+      const wasm: any = await import(/* @vite-ignore */ WASM_JS_URL)
+      const init = wasm.default || wasm
+      
+      // Initialize wasm instance
+      await init(WASM_FILE_URL)
+      
+      // Server returns { d: encryptedData, t: iv, a: authTag }
+      // Let's decrypt these parameters using WASM
+      const decryptedString = wasm.decrypt(response.d, response.t, response.a)
+      
+      // Parse back into JSON and set to state
+      result.value = JSON.parse(decryptedString)
+    }
     
-    // Initialize wasm instance
-    await init(WASM_FILE_URL)
-    
-    // Server returns { d: encryptedData, t: iv, a: authTag }
-    // Let's decrypt these parameters using WASM
-    const decryptedString = wasm.decrypt(response.d, response.t, response.a)
-    
-    // Parse back into JSON and set to state
-    result.value = JSON.parse(decryptedString)
-    
-    showToast('Berhasil! Siap untuk diunduh', 'success')
+    showToast('Tautan berhasil diproses! Siap untuk diunduh.', 'success')
   } catch (error: any) {
-    showToast(error.data?.message || 'Waduh, sesuatu berjalan salah')
+    showToast(error.data?.message || 'Gagal memproses tautan, silakan coba lagi.')
     console.error('API Error:', error)
   } finally {
     loading.value = false
@@ -74,7 +98,7 @@ const handleGo = async () => {
   
   const platform = detectPlatform(url.value)
   if (!platform) {
-    showToast('Tautan tidak dikenali. Silakan pilih platform manual.')
+    showToast('Tautan tidak didukung, silakan periksa kembali.')
     return
   }
   
@@ -86,7 +110,7 @@ const handlePlatformClick = async (platform: any) => {
   if (!isUrlValid.value) return
   
   if (!platform.regex.test(url.value)) {
-    showToast(`Sepertinya ini bukan tautan ${platform.name}`)
+    showToast(`Pastikan tautan yang dimasukkan dari ${platform.name}.`)
     return
   }
   
@@ -224,179 +248,230 @@ const downloadAll = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-amber-50 flex items-center justify-center p-3 sm:p-4">
-    <div class="w-full max-w-4xl">
+  <div class="min-h-screen flex items-center justify-center p-6 lg:p-10 max-sm:items-start max-sm:pt-14">
+    <div class="w-full max-w-2xl lg:max-w-3xl">
       <!-- Header -->
-      <div class="text-center mb-6 sm:mb-8">
-        <h1 class="text-3xl sm:text-4xl font-black text-gray-900 mb-2">All In One Downloader</h1>
-        <p class="text-sm sm:text-base text-gray-700 font-medium">Simpan konten favoritmu dari mana saja</p>
+      <header class="mb-12 max-sm:mb-8">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <Icon name="mdi:arrow-down-circle" class="text-[32px] lg:text-[36px] text-txt" />
+            <span class="font-mono text-2xl lg:text-[28px] font-medium tracking-tight text-txt">one</span>
+          </div>
+          <button
+            class="w-10 h-10 flex items-center justify-center bg-transparent border border-border rounded-full cursor-pointer transition-colors duration-200 text-txt-2 hover:border-border-hover hover:text-txt"
+            @click="toggleTheme"
+            :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+          >
+            <Icon :name="isDark ? 'mdi:weather-sunny' : 'mdi:weather-night'" class="text-xl" />
+          </button>
+        </div>
+        <p class="text-base lg:text-lg text-txt-2 pl-[44px] lg:pl-[48px]">Paste a link. Get the file.</p>
+      </header>
+      
+      <!-- Input -->
+      <div class="flex gap-3 mb-5">
+        <input
+          v-model="url"
+          type="text"
+          placeholder="https://..."
+          class="url-input"
+          @keyup.enter="handleGo"
+        />
+        <button
+          @click="handleGo"
+          :disabled="!isUrlValid || loading"
+          class="w-14 h-14 flex items-center justify-center bg-btn-bg rounded-xl border-none cursor-pointer transition-all duration-150 shrink-0 hover:not-disabled:opacity-85 active:not-disabled:scale-95 disabled:bg-surface-2 disabled:cursor-not-allowed"
+        >
+          <Icon v-if="loading" name="mdi:loading" class="text-2xl text-btn-fg animate-spin" />
+          <Icon v-else name="mdi:arrow-right" class="text-2xl text-btn-fg" />
+        </button>
       </div>
       
-      <!-- Main Card -->
-      <div class="bg-white rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] sm:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-4 sm:p-6 md:p-8">
-        <!-- URL Input -->
-        <div class="flex gap-2 sm:gap-3 mb-4 sm:mb-6">
-          <input
-            v-model="url"
-            type="text"
-            placeholder="Tempel tautanmu di sini..."
-            class="flex-1 px-3 py-2.5 sm:px-4 sm:py-3 border-2 border-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm sm:text-base text-gray-900 font-medium placeholder:text-gray-500"
-            @keyup.enter="handleGo"
+      <!-- Platforms -->
+      <div class="flex gap-2.5 flex-wrap mb-8 max-sm:gap-2">
+        <button
+          v-for="platform in platforms"
+          :key="platform.id"
+          @click="handlePlatformClick(platform)"
+          :disabled="!isUrlValid || loading"
+          class="platform-chip"
+          :style="{ '--accent': platform.accent }"
+        >
+          <Icon :name="platform.icon" class="text-lg" />
+          <span>{{ platform.name }}</span>
+        </button>
+      </div>
+      
+      <!-- Results -->
+      <div v-if="result" class="border-t border-border pt-7 mt-3">
+        <div class="flex items-center justify-between mb-5">
+          <span class="text-sm font-semibold uppercase tracking-wider text-txt-2">Results</span>
+          <span v-if="getDownloadLinks.length" class="font-mono text-sm text-txt-3">
+            {{ getDownloadLinks.length }} file{{ getDownloadLinks.length > 1 ? 's' : '' }}
+          </span>
+        </div>
+        
+        <!-- Metadata -->
+        <div v-if="result.title || result.description || result.thumbnail" class="bg-surface border border-border rounded-xl overflow-hidden mb-5">
+          <img 
+            v-if="result.thumbnail" 
+            :src="result.thumbnail" 
+            :alt="result.title || 'Thumbnail'" 
+            class="w-full aspect-video object-cover block"
           />
-          <button
-            @click="handleGo"
-            :disabled="!isUrlValid || loading"
-            class="px-4 py-2.5 sm:px-6 sm:py-3 bg-gray-900 text-white rounded-lg font-bold border-2 border-gray-900 hover:bg-gray-800 disabled:bg-gray-300 disabled:border-gray-300 disabled:cursor-not-allowed transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] sm:hover:translate-x-[2px] sm:hover:translate-y-[2px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] sm:active:translate-x-[4px] sm:active:translate-y-[4px]"
-          >
-            <Icon v-if="loading" name="mdi:loading" class="text-xl sm:text-2xl animate-spin" />
-            <Icon v-else name="mdi:arrow-right" class="text-xl sm:text-2xl" />
-          </button>
-        </div>
-        
-        <!-- Platform Buttons -->
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <button
-            v-for="platform in platforms"
-            :key="platform.name"
-            @click="handlePlatformClick(platform)"
-            :disabled="!isUrlValid || loading"
-            :class="[
-              platform.color,
-              'p-4 sm:p-6 rounded-xl border-2 flex flex-col items-center justify-center gap-2 sm:gap-3 font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] sm:hover:translate-x-[2px] sm:hover:translate-y-[2px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] sm:active:translate-x-[4px] sm:active:translate-y-[4px]'
-            ]"
-          >
-            <Icon :name="platform.icon" class="text-4xl sm:text-5xl" />
-            <span class="text-xs sm:text-sm">{{ platform.name }}</span>
-          </button>
-        </div>
-        
-        <!-- Results -->
-        <div v-if="result" class="border-t-2 border-gray-900 pt-4 sm:pt-6">
-          <div class="flex items-center justify-between mb-3 sm:mb-4">
-            <h3 class="text-lg sm:text-xl font-black text-gray-900">📦 Hasil</h3>
-            <!--
-            <button
-              v-if="getDownloadLinks.length > 1"
-              @click="downloadAll"
-              class="px-3 py-2 sm:px-4 sm:py-2.5 bg-blue-100 hover:bg-blue-200 text-blue-900 rounded-lg font-bold border-2 border-blue-700 transition-all shadow-[2px_2px_0px_0px_rgba(29,78,216,1)] hover:shadow-[1px_1px_0px_0px_rgba(29,78,216,1)] hover:translate-x-[1px] hover:translate-y-[1px] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] flex items-center gap-2"
-            >
-              <Icon name="mdi:download-multiple" class="text-lg sm:text-xl" />
-              <span class="text-xs sm:text-sm">Download All ({{ getDownloadLinks.length }})</span>
-            </button>
-            -->
+          <div class="p-4 lg:p-5">
+            <h4 v-if="result.title" class="text-base font-semibold text-txt mb-1.5 leading-snug">{{ result.title }}</h4>
+            <p v-if="result.description" class="text-sm text-txt-2 leading-relaxed line-clamp-2">{{ result.description }}</p>
+            <p v-if="result.username" class="font-mono text-sm text-txt-3 mt-2">@{{ result.username }}</p>
           </div>
-          
-          <!-- Metadata -->
-          <div v-if="result.title || result.description || result.thumbnail" class="mb-3 sm:mb-4 bg-amber-50 rounded-lg border-2 border-gray-900 overflow-hidden">
-            <img 
-              v-if="result.thumbnail" 
-              :src="result.thumbnail" 
-              :alt="result.title || 'Thumbnail'" 
-              class="w-full aspect-video object-cover bg-gray-900"
+        </div>
+        
+        <!-- Download Links -->
+        <div v-if="getDownloadLinks.length > 0" class="grid gap-3 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
+          <div
+            v-for="(link, index) in getDownloadLinks"
+            :key="index"
+            class="bg-surface border border-border rounded-xl overflow-hidden transition-colors duration-200 hover:border-border-hover"
+          >
+            <!-- Video Preview -->
+            <video
+              v-if="link.type === 'video'"
+              :src="link.url"
+              controls
+              class="w-full aspect-video bg-black block"
+              preload="metadata"
             />
-            <div class="p-3 sm:p-4">
-              <h4 v-if="result.title" class="font-bold text-sm sm:text-base text-gray-900 mb-1">{{ result.title }}</h4>
-              <p v-if="result.description" class="text-xs sm:text-sm text-gray-700 line-clamp-2">{{ result.description }}</p>
-              <p v-if="result.username" class="text-xs sm:text-sm text-gray-700 mt-1 font-medium">@{{ result.username }}</p>
-            </div>
-          </div>
-          
-          <!-- Download Links -->
-          <div v-if="getDownloadLinks.length > 0" :class="'grid grid-cols-1 gap-3 sm:gap-4 ' + (getDownloadLinks.length > 1 ? 'md:grid-cols-2 xl:grid-cols-3' : '')">
-            <div
-              v-for="(link, index) in getDownloadLinks"
-              :key="index"
-              class="bg-green-50 rounded-lg border-2 border-green-700 overflow-hidden shadow-[2px_2px_0px_0px_rgba(21,128,61,1)] sm:shadow-[3px_3px_0px_0px_rgba(21,128,61,1)]"
-            >
-              <!-- Video Preview -->
-              <video
-                v-if="link.type === 'video'"
+            
+            <!-- Image Preview -->
+            <img
+              v-else-if="link.type === 'image'"
+              :src="link.url"
+              :alt="link.label"
+              class="w-full object-contain bg-black max-h-96"
+            />
+            
+            <!-- Audio Preview -->
+            <div v-else-if="link.type === 'audio'" class="p-5 bg-surface-2">
+              <audio
                 :src="link.url"
                 controls
-                class="w-full aspect-video bg-black"
+                class="w-full"
                 preload="metadata"
               />
-              
-              <!-- Image Preview -->
-              <img
-                v-else-if="link.type === 'image'"
-                :src="link.url"
-                :alt="link.label"
-                class="w-full object-contain bg-gray-900 max-h-96"
-              />
-              
-              <!-- Audio Preview -->
-              <div v-else-if="link.type === 'audio'" class="p-4 bg-gray-900">
-                <audio
-                  :src="link.url"
-                  controls
-                  class="w-full"
-                  preload="metadata"
-                />
-              </div>
-              
-              <!-- Download Button -->
-              <a
-                :href="link.url"
-                target="_blank"
-                download
-                class="flex items-center justify-between p-3 sm:p-4 bg-green-100 hover:bg-green-200 transition-colors"
-              >
-                <span class="text-green-900 font-bold text-sm sm:text-base break-all mr-2">{{ link.label }}</span>
-                <Icon name="mdi:download" class="text-xl sm:text-2xl text-green-700 flex-shrink-0" />
-              </a>
             </div>
+            
+            <!-- Download Button -->
+            <a
+              :href="link.url"
+              target="_blank"
+              download
+              class="flex items-center justify-between py-3.5 px-5 text-txt no-underline transition-colors duration-150 hover:bg-surface-2"
+            >
+              <span class="text-sm font-medium break-all mr-3">{{ link.label }}</span>
+              <Icon name="mdi:download" class="text-xl text-txt-2 shrink-0" />
+            </a>
           </div>
-          
-          <!-- Raw Data (fallback) -->
-          <div v-else class="p-3 sm:p-4 bg-gray-100 rounded-lg border-2 border-gray-900">
-            <pre class="text-[10px] sm:text-xs text-gray-700 overflow-auto font-mono">{{ JSON.stringify(result, null, 2) }}</pre>
-          </div>
+        </div>
+        
+        <!-- Raw Data (fallback) -->
+        <div v-else class="bg-surface border border-border rounded-xl p-5">
+          <pre class="font-mono text-xs text-txt-2 overflow-auto whitespace-pre-wrap break-all">{{ JSON.stringify(result, null, 2) }}</pre>
         </div>
       </div>
       
       <!-- Footer -->
-      <div class="text-center mt-6 sm:mt-8 text-xs sm:text-sm text-gray-700 space-y-2 px-2">
-        <p class="font-medium">Support: YouTube • Instagram • Facebook • TikTok</p>
-        <p class="font-medium">
-          Powered by 
-          <a 
-            href="https://mono.fdvky.me" 
-            target="_blank" 
-            class="text-gray-900 underline decoration-2 hover:text-gray-700 transition-colors font-bold"
-          >
-            Mono
+      <footer class="text-center mt-12 text-sm text-txt-3 flex flex-col items-center gap-2">
+        <div class="flex items-center gap-2">
+          <span>YouTube · Instagram · Facebook · TikTok</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="https://mono.fdvky.me" target="_blank" class="font-mono text-txt-2 no-underline transition-colors duration-200 hover:text-txt">mono</a>
+          <span class="text-txt-3">·</span>
+          <a href="https://github.com/fdvky1/one" target="_blank" class="font-mono text-txt-2 no-underline transition-colors duration-200 hover:text-txt inline-flex items-center gap-1">
+            <Icon name="mdi:github" class="text-base" />github
           </a>
-        </p>
-      </div>
+        </div>
+      </footer>
     </div>
     
-    <!-- Toast Notification -->
-    <Transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="translate-y-2 opacity-0"
-      enter-to-class="translate-y-0 opacity-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="translate-y-0 opacity-100"
-      leave-to-class="translate-y-2 opacity-0"
-    >
+    <!-- Toast -->
+    <Transition name="toast">
       <div
         v-if="toast.show"
         :class="[
-          'fixed bottom-4 right-4 sm:bottom-6 sm:right-6 px-4 py-3 sm:px-6 sm:py-4 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] max-w-[calc(100vw-2rem)] sm:max-w-md',
-          toast.type === 'success' 
-            ? 'bg-green-100 text-green-900' 
-            : 'bg-red-100 text-red-900'
+          'fixed bottom-6 right-6 py-3.5 px-5 rounded-xl text-sm font-medium flex items-center gap-2.5 max-w-[calc(100vw-48px)] z-50 max-sm:bottom-4 max-sm:right-4 max-sm:left-4 max-sm:max-w-none',
+          toast.type === 'success'
+            ? 'bg-th-green/12 border border-th-green/25 text-th-green'
+            : 'bg-th-red/12 border border-th-red/25 text-th-red'
         ]"
       >
-        <div class="flex items-center gap-2 sm:gap-3">
-          <Icon
-            :name="toast.type === 'success' ? 'mdi:check-circle' : 'mdi:alert-circle'"
-            class="text-xl sm:text-2xl font-bold flex-shrink-0"
-          />
-          <span class="font-bold text-sm sm:text-base">{{ toast.message }}</span>
-        </div>
+        <Icon
+          :name="toast.type === 'success' ? 'mdi:check-circle' : 'mdi:alert-circle'"
+          class="text-xl shrink-0"
+        />
+        <span>{{ toast.message }}</span>
       </div>
     </Transition>
   </div>
 </template>
+
+<style scoped>
+/* Only styles that can't be expressed with Tailwind utilities */
+.url-input {
+  flex: 1;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.url-input::placeholder {
+  color: var(--text-3);
+}
+
+.url-input:focus {
+  border-color: var(--border-hover);
+}
+
+.platform-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-2);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.platform-chip:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.platform-chip:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .url-input {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+  
+  .platform-chip {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}
+</style>
