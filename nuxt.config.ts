@@ -19,7 +19,7 @@ export default defineNuxtConfig({
         { property: 'og:type', content: 'website' },
         { property: 'og:title', content: 'One — Unduh Video dari YouTube, Instagram, TikTok & Facebook' },
         { property: 'og:description', content: 'Tempel tautan, langsung unduh. Unduh video dan audio dari YouTube, Instagram, TikTok, dan Facebook — gratis, cepat, tanpa iklan.' },
-        { property: 'og:image', content: '/og-image.png' },
+        { property: 'og:image', content: 'https://one.fdvky.me/og-image.png' },
         { property: 'og:image:width', content: '1200' },
         { property: 'og:image:height', content: '630' },
         { property: 'og:locale', content: 'id_ID' },
@@ -46,7 +46,8 @@ export default defineNuxtConfig({
     baseUrl: process.env.BASE_URL || 'https://mono.fdvky.me/api/v1'
   },
   routeRules: {
-    '/wasm/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } }
+    '/wasm/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+    '/og-image.png': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } }
   },
   vite: {
     plugins: [
