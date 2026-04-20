@@ -33,6 +33,11 @@ export default defineEventHandler(async (event) => {
     
     const data = await response.json()
 
+    // Disable encryption in development mode
+    if (process.env.NODE_ENV === 'development') {
+      return { raw: data }
+    }
+
     // Import the build-generated secret string dynamically
     // Use AES-256-GCM to encrypt the response body
     const { secretKey } = await import('../utils/secret').catch(() => {
